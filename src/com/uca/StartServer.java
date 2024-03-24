@@ -67,4 +67,5 @@ public class StartServer {
                 res.redirect("/train");
                 return "";
             });
+    }
 }
