@@ -1,0 +1,94 @@
+#+TITLE: Projet : Train
+
+** Exécution
+
+#+BEGIN_src bash 
+./gradlew run
+#+END_src
+
+Rendez-vous sur http://localhost:8081/
+
+* Objectifs
+
+Le but de ce projet est un gestionnaire de trajet de train sur lequel plusieurs personnes puissent travailler en même temps. 
+
+Il faudra remplir les objectifs suivants :
+
+** Configurer votre espace de travail
+
+Il vous faut outil de développement en Java, mais surtout l'accès à un serveur postgresql. Deux choix s'offrent à vous :
+
+1. programmer et  installer posgresql sur votre machine personnelle
+2. programmer et installer postgresql sur votre machine virtuelle (celle nommée vm-etu-votre_login.local.isima.fr)
+
+Voir les instructions dans la section suivante "Configuration de Postgresql".
+
+Pour configurer l'accès à la base de données, aller dans la classe "com.uca.dao.ConnectionPool" et modifier les valeurs suivantes, quelque soit votre choix précédent :
+
+  - ~URL~ devient "jdbc:postgresql://localhost/train"
+  - ~USER~ devient "votre_login"
+  - ~PASSWORD~ devient "votre_mot_de_passe_pg"
+
+ Un objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]] en java correspond à une session, où plusieurs transactions successives vont être créées.
+
+ Remarque: Vous devez, dès que cela est pertinent, interagir avec la base de données en créant des transactions. Pour cela, vous devez utiliser les méthodes ~setAutoCommit~, ~commit~ et ~rollback~ de l'objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]]. Chaque connection peut être vu comme une session des précédents TPs. N'oubliez pas non plus de choisir un niveau d'isolation des transactions avec la méthode ~setTransactionIsolation~.
+
+** Initialiser la base de donnée
+
+Modifier le code de la classe "com.uca.dao.DBInitializer" pour initialiser les tables dans le cas, où elles n'existent pas. Il faut aussi choisir une clé primaire pour chaque table et ajouter des contraintes pour éviter des données non valides.
+
+
+* Configuration de Postgresql
+
+Pour développer, il faudra ouvrir une connection avec un serveur postgres, qui sera installé sur votre machine virtuelle étudiante (celle nommée vm-etu-votre_login.local.isima.fr).
+
+** Installation de postgresql 
+
+#+BEGIN_src bash
+sudo apt install postgresql
+#+END_src
+
+** Configurer votre utilisateur et votre base de données
+
+Connectez vous au serveur postgres via le client ~psql~:
+#+BEGIN_src bash
+  sudo su postgres
+  psql
+#+END_src
+
+Créer votre utilisateur avec votre login (*il faut que ça soit votre login courant !!*) avec le mot de passe de votre choix:
+#+BEGIN_src sql
+CREATE USER votre_login WITH PASSWORD 'choissisez un mot de passe (pas votre mp UCA !!!!)';
+#+END_src
+
+Créer la base de donnée que vous allez utiliser durant le projet : 
+#+BEGIN_src sql
+CREATE DATABASE train;
+#+END_src
+
+Accorder tous les droits à votre utilisateur sur cette base :
+#+BEGIN_src sql
+GRANT ALL PRIVILEGES ON DATABASE train TO votre_login;
+#+END_src
+
+Quitter le client ~psql~ avec la commande ~\q~. Et déconnectez vous du login postgres depuis bash.
+
+Connectez-vous à votre base de données avec votre nouvel utilisateur :
+#+BEGIN_src bash
+psql -U votre_login -d train
+#+END_src
+
+** Commandes utiles dans le client psql
+
+Contrairement au client Oracle, l'auto commit est activé dans psql, ce qui signifie que :
+- les transactions doivent explicitement débuter par le mot-clé ~BEGIN~
+- les requêtes en dehors de transaction sont automatiquement validé à la fin de l'exécution, s'il n'y pas d'erreur.
+
+- ~\q~ quitter
+- ~\dt~ lister les tables de la base de données courante
+- ~\c autre_base~ se connecter à une autre base de données
+
+** Sources
+- https://www.bigbinary.com/blog/configure-postgresql-to-allow-remote-connection
+- https://www.ibm.com/docs/fr/urbancode-deploy/6.2.2?topic=configuration-configuring-postgresql-database-blueprint-design-server
+
