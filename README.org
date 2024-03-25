@@ -1,7 +1,125 @@
 #+TITLE: Projet : Train
 
-** Exécution
+* Prise en main
 
+** Forker le dépôt depuis Gitlab
+
+En vous connectant sur gitlab.isima.fr, vous pouvez utiliser le bouton "Fork" du projet pour en faire une copie sur votre compte et ainsi faire des push dessus. 
+
+** Configurer votre espace de travail
+
+Il vous faut outil de développement en Java, mais surtout l'accès à un serveur postgresql. Deux choix s'offrent à vous :
+
+1. programmer et  installer posgresql sur votre machine personnelle
+2. programmer et installer postgresql sur votre machine virtuelle (celle nommée vm-etu-votre_login.local.isima.fr)
+** Configuration de Postgresql
+
+Pour développer, il faudra ouvrir une connection avec un serveur postgres, qui sera installé sur votre machine virtuelle étudiante (celle nommée vm-etu-votre_login.local.isima.fr).
+
+*** Installation de postgresql 
+
+#+BEGIN_src bash
+sudo apt install postgresql
+#+END_src
+
+*** Vérifier que les connexions TCP/IP avec mot de passe sont permises
+
+L'API JDBC (Java Database Connectivity) est un outil incontournable pour interagir avec un SGDB depuis Java. Cette API ouvre une connection avec le serveur postgres via le protocole TCP/IP sur le port par défaut 5432.  Pour des raisons de sécurité de telles connexions ne sont pas toujours possible par défaut. On souhaite se connecter avec un utilisateur et un mot de passe (que l'on va créer juste après) en utilisant soit la méthode d'authentification ~md5~ ou ~scram-sha-256~.
+
+Éditer le fichier de configuration ~pg_hda.conf~ (sur Debian dans le dossier ~/etc/postgresql/<version>/main~, existe aussi sous Windows : ~C:\Program Files\PostgreSQL\<version>\data\postgresql.conf~) et modifier deux lignes de la manière suivante en vérifiant que la dernière colonne a pour valeur ~md5~ ou ~scram-sha-256~ :
+
+#+BEGIN_src
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+#+END_src
+
+En cas d'erreurs répétées, vous pouvez accepter toutes les connexions sans vérifier le mot de passe en remplaçant ~scram-sha-256~ par ~trust~.
+
+Redémarrer le serveur Postgres après chaque modification de fichier de configuration avec :
+#+BEGIN_src sql
+sudo systemctl restart postgresql
+#+END_src
+
+Plus d'information ici :
+- [[https://www.postgresql.org/docs/current/auth-pg-hba-conf.html]]
+- [[https://www.postgresql.org/docs/current/auth-password.html]]
+
+*** Configurer votre utilisateur et votre base de données
+
+Connectez vous au serveur postgres via le client ~psql~:
+#+BEGIN_src bash
+  sudo -u postgres psql
+#+END_src
+
+Créer votre utilisateur ~nom_d_utilisateur~ avec un utilisateur de votre choix avec le mot de passe de votre choix:
+#+BEGIN_src sql
+CREATE USER nom_d_utilisateur WITH PASSWORD 'un mot de passe simple';
+#+END_src
+
+Créer la base de donnée que vous allez utiliser durant le projet : 
+#+BEGIN_src sql
+CREATE DATABASE train;
+#+END_src
+
+Déclarer votre utilisateur comme propriétaire de la base :
+#+BEGIN_src sql
+ALTER DATABASE train OWNER TO nom_d_utilisateur;
+#+END_src
+
+Accorder tous les droits à votre utilisateur sur cette base :
+#+BEGIN_src sql
+GRANT ALL PRIVILEGES ON DATABASE train TO nom_d_utilisateur;
+#+END_src
+
+Quitter le client ~psql~ avec la commande ~\q~. Et déconnectez vous du login postgres depuis bash.
+
+Tester la connexion à votre base de données avec votre nouvel utilisateur via TCP/IP:
+#+BEGIN_src bash
+psql -U nom_d_utilisateur -h localhost -d train -W
+#+END_src
+
+*** Commandes utiles dans le client psql
+
+Contrairement au client Oracle, l'auto commit est activé dans psql, ce qui signifie que :
+- les transactions doivent explicitement débuter par le mot-clé ~BEGIN~
+- les requêtes en dehors de transaction sont automatiquement validé à la fin de l'exécution, s'il n'y pas d'erreur.
+
+- ~\q~ quitter
+- ~\dt~ lister les tables de la base de données courante
+- ~\c autre_base~ se connecter à une autre base de données
+
+*** Coder depuis une machine locale sans Postgres (à tester en salle d'info)
+
+Il se peut que vous constatiez des difficultés pour coder depuis votre machine virtuelle. Il serait préférable de coder depuis la machine locale et de tester avec le navigateur Web de la machine locale. Cela est possible grâce à SSH en transférant la connexion TCP/IP sur le port 5432 de la machine locale au serveur Postgres sur la machine virtuelle :
+
+#+BEGIN_src bash
+ssh -L 5432:localhost:5432 login@vm-etu-login.local.isima.fr
+#+END_src
+
+*** Sources
+- https://www.bigbinary.com/blog/configure-postgresql-to-allow-remote-connection
+- https://www.ibm.com/docs/fr/urbancode-deploy/6.2.2?topic=configuration-configuring-postgresql-database-blueprint-design-server
+
+
+** Première exécution
+
+*** ConnectionPool
+
+Avant de lancer le code pour la première fois, il faut configurer l'accès à la base de données. Aller dans la classe "com.uca.dao.ConnectionPool" et modifier les valeurs suivantes :
+
+  - ~URL~ devient "jdbc:postgresql://localhost/train"
+  - ~USER~ devient "nom_d_utilisateur"
+  - ~PASSWORD~ devient "votre_mot_de_passe"
+
+ La classe ~ConnectionPool~ gère les différentes connections ouvertes par le serveur Java. Un objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]] en java correspond à une session, où plusieurs transactions successives peuvent être créées. Quand on souhaite créer une transaction depuis Java, on demande une connection à ~ConnectionPool~ via la méthode ~getConnection~ et une fois la transaction finie, il faut la rendre à ~ConnectionPool~ via ~releaseConnection~.
+
+ *Remarque*: Vous devez toujours interagir avec la base de données en créant des transactions. Pour cela, vous devez utiliser les méthodes ~setAutoCommit~, ~commit~ et ~rollback~ de l'objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]]. N'oubliez pas non plus de choisir un niveau d'isolation des transactions avec la méthode ~setTransactionIsolation~.
+
+*** Exécution
+
+Lancer une première fois le serveur Java avec la commande (à redémarrer après chaque modification du code) : 
 #+BEGIN_src bash 
 ./gradlew run
 #+END_src
@@ -14,81 +132,9 @@ Le but de ce projet est un gestionnaire de trajet de train sur lequel plusieurs 
 
 Il faudra remplir les objectifs ci-dessous:
 
-** Configurer votre espace de travail
-
-Il vous faut outil de développement en Java, mais surtout l'accès à un serveur postgresql. Deux choix s'offrent à vous :
-
-1. programmer et  installer posgresql sur votre machine personnelle
-2. programmer et installer postgresql sur votre machine virtuelle (celle nommée vm-etu-votre_login.local.isima.fr)
-
-Voir les instructions dans la section suivante "Configuration de Postgresql".
-
-Pour configurer l'accès à la base de données, aller dans la classe "com.uca.dao.ConnectionPool" et modifier les valeurs suivantes, quelque soit votre choix précédent :
-
-  - ~URL~ devient "jdbc:postgresql://localhost/train"
-  - ~USER~ devient "votre_login"
-  - ~PASSWORD~ devient "votre_mot_de_passe_pg"
-
- Un objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]] en java correspond à une session, où plusieurs transactions successives vont être créées.
-
- Remarque: Vous devez, dès que cela est pertinent, interagir avec la base de données en créant des transactions. Pour cela, vous devez utiliser les méthodes ~setAutoCommit~, ~commit~ et ~rollback~ de l'objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]]. Chaque connection peut être vu comme une session des précédents TPs. N'oubliez pas non plus de choisir un niveau d'isolation des transactions avec la méthode ~setTransactionIsolation~.
 
 ** Initialiser la base de donnée
 
 Modifier le code de la classe "com.uca.dao.DBInitializer" pour initialiser les tables dans le cas, où elles n'existent pas. Il faut aussi choisir une clé primaire pour chaque table et ajouter des contraintes pour éviter des données non valides.
 
-
-* Configuration de Postgresql
-
-Pour développer, il faudra ouvrir une connection avec un serveur postgres, qui sera installé sur votre machine virtuelle étudiante (celle nommée vm-etu-votre_login.local.isima.fr).
-
-** Installation de postgresql 
-
-#+BEGIN_src bash
-sudo apt install postgresql
-#+END_src
-
-** Configurer votre utilisateur et votre base de données
-
-Connectez vous au serveur postgres via le client ~psql~:
-#+BEGIN_src bash
-  sudo su postgres
-  psql
-#+END_src
-
-Créer votre utilisateur avec votre login (*il faut que ça soit votre login courant !!*) avec le mot de passe de votre choix:
-#+BEGIN_src sql
-CREATE USER votre_login WITH PASSWORD 'choissisez un mot de passe (pas votre mp UCA !!!!)';
-#+END_src
-
-Créer la base de donnée que vous allez utiliser durant le projet : 
-#+BEGIN_src sql
-CREATE DATABASE train;
-#+END_src
-
-Accorder tous les droits à votre utilisateur sur cette base :
-#+BEGIN_src sql
-GRANT ALL PRIVILEGES ON DATABASE train TO votre_login;
-#+END_src
-
-Quitter le client ~psql~ avec la commande ~\q~. Et déconnectez vous du login postgres depuis bash.
-
-Connectez-vous à votre base de données avec votre nouvel utilisateur :
-#+BEGIN_src bash
-psql -U votre_login -d train
-#+END_src
-
-** Commandes utiles dans le client psql
-
-Contrairement au client Oracle, l'auto commit est activé dans psql, ce qui signifie que :
-- les transactions doivent explicitement débuter par le mot-clé ~BEGIN~
-- les requêtes en dehors de transaction sont automatiquement validé à la fin de l'exécution, s'il n'y pas d'erreur.
-
-- ~\q~ quitter
-- ~\dt~ lister les tables de la base de données courante
-- ~\c autre_base~ se connecter à une autre base de données
-
-** Sources
-- https://www.bigbinary.com/blog/configure-postgresql-to-allow-remote-connection
-- https://www.ibm.com/docs/fr/urbancode-deploy/6.2.2?topic=configuration-configuring-postgresql-database-blueprint-design-server
 
