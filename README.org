@@ -135,6 +135,7 @@ Il faudra remplir les objectifs ci-dessous:
 
 ** Initialiser la base de donnée
 
-Modifier le code de la classe "com.uca.dao.DBInitializer" pour initialiser les tables dans le cas, où elles n'existent pas. Il faut aussi choisir une clé primaire pour chaque table et ajouter des contraintes pour éviter des données non valides.
+Modifier le code de la classe "com.uca.dao.DBInitializer" pour initialiser les tables dans le cas, où elles n'existent pas. Il faut aussi choisir une clé primaire pour chaque table, ajouter des clés étrangères.
+
 
 
