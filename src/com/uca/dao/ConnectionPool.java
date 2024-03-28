@@ -5,17 +5,21 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
+
 public class ConnectionPool {
 
+    // nombre de connections disponibles 
     private final static int INITIAL_POOL_SIZE = 10;
     private final static String URL = "jdbc:postgresql://localhost/train";
     private final static String USER = "postgres";
     private final static String PASSWORD = "postgres";
 
+    // connections disponibles
     private static List<Connection> connectionPool = new ArrayList<>(INITIAL_POOL_SIZE);
+    // connections utilisées
     private static List<Connection> usedConnections = new ArrayList<>();
 
-    
+    // initialisation des connections 
     public static void init() {
         try {
             for (int i = 0; i < INITIAL_POOL_SIZE; i++) {
@@ -26,14 +30,21 @@ public class ConnectionPool {
             throw new RuntimeException(e);
         }
     }
-    
+
+    /**
+     * Cette méthode permet de récupérer une connection non utilisée
+    */
     public static Connection getConnection() {
         Connection connection = connectionPool
           .remove(connectionPool.size() - 1);
         usedConnections.add(connection);
         return connection;
     }
-    
+
+    /**
+     * Cette méthode rendre une connection une fois qu'elle n'est plus utile
+     * Cette connection doit être propre (pas de transaction en cours)
+     */
     public static boolean releaseConnection(Connection connection) {
         connectionPool.add(connection);
         return usedConnections.remove(connection);

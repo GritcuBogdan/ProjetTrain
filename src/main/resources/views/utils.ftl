@@ -14,7 +14,7 @@
 
     <h1>${title}</h1>
 
-    <#-- This processes the enclosed content:  -->
+    <#-- ici est inséré le contenu du sous template  -->
          <#nested>
   </body>
 </html>
