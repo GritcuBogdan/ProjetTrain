@@ -1,0 +1,333 @@
+\documentclass[10pt, vitellins]{article}
+
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx} 
+\usepackage[gen]{eurosym}
+\usepackage{multicol,enumerate}
+\usepackage{tikz}
+\usepackage{listingsutf8}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{ulem}
+\usepackage{comment}
+\usepackage{hyperref}
+% \usetikzlibrary{shapes,patterns}
+\usetikzlibrary{arrows.meta,calc,decorations.markings,math,arrows.meta, shapes, patterns}
+
+\newif\ifshow
+\showtrue
+\usepackage{version}
+\ifshow
+  \newenvironment{correction}{\emph{Correction}:}{}
+\else
+  \excludeversion{correction}
+\fi
+
+
+% FRENCH
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{listingsutf8}
+
+\topmargin=-2cm
+\oddsidemargin=2.2cm
+\evensidemargin=2.2cm
+\textwidth=15cm
+\textheight=23.4cm
+% \textwidth=6in
+\hoffset=-0.7in
+% \headsep=25pt
+% \footskip=20pt
+
+\newcounter{question}
+\newcommand{\initQ}{\setcounter{question}{0}}
+\newenvironment{question}{\refstepcounter{question} \noindent {\it {Question} \thequestion.\ }}
+{\par}
+
+% Warning.
+\newcommand{\warning}[1]{\begin{mdframed}[backgroundcolor=yellow]#1\end{mdframed}}
+
+\newcounter{objectif}
+\newenvironment{objectif}[1][]{\refstepcounter{objectif} \noindent \textbf{Objectif \theobjectif}. \normalsize }{\par}
+
+\newcommand{\corr}[1]{\emph{Correction}: #1}
+
+\newcommand{\entete}[3]{%
+  \vskip -3 cm \hfill{\hrule}\vskip 0.2 cm \noindent{\Large \sc #2}\\ \vskip 0.1 cm \noindent\textit{#3 \hfill #1} \vskip 0.01 cm
+  \hfill{\hrule} \vspace{1cm}}
+
+\parindent 0pt
+
+\parskip 4pt
+
+
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1
+}
+
+\lstset{
+  language=sql,
+  tabsize=4,
+  frame=tb
+  rulesepcolor=\color{gray},
+  keywordstyle=\color{blue}\bf,
+  commentstyle=\color{OliveGreen},
+  stringstyle=\color{red},
+  breaklines=true,
+  showstringspaces=false,
+  basicstyle=\footnotesize,
+  inputencoding=utf8/latin1
+}
+
+
+\begin{document}
+\entete{}{Implémentation des SGBDs L2}{Projet}
+
+
+\vspace{-2\baselineskip}
+
+
+\section*{Projet de gestion ferroviaire}
+
+\subsection*{Introduction}
+
+L'objectif de ce projet est de réaliser un gestionnaire pour les trajets des trains sur un réseau ferroviaire. On souhaite que la gestion puisse être effectuée par plusieurs personnes à la fois. Ce gestionnaire prendra la forme d'une application Web développée en Java utilisant une base de données Postgresql. Une attention particulière sera portée à la gestion de la concurrence, au maintient de la cohérence des données et plus généralement à l'intégration du SGDB dans l'application.
+
+\subsubsection*{Vocabulaire}
+
+Un parcours sur le réseau ferroviaire est appelé une \textit{ligne}, elle est identifiée par un \textit{numéro} et porte un nom comme par exemple ``Clermont-Paris''. La gare de départ et le terminus d'une ligne font partis de l'ensemble de ses \textit{arrêts}. Les gares sont assimilées aux \textit{villes} pour simplifier. Les arrêts d'une ligne sont ordonnés par \textit{rang} croissant avec zéro pour le départ : le rang correspond à l'ordre de visite des arrêt. Le temps écoulé entre le départ d'un train au début d'une ligne et son arrivée dans une gare  est appelé le \textit{chrono}. Dans la table \texttt{DEPART} se trouve les \textit{horaires} d'arrivée de chaque train à la première gare d'une ligne. Une même ligne peut être empruntée par plusieurs trains dans une même journée. Pour simplifier, on supposera que \textbf{les horaires des trains sont les mêmes tous les jours}. Un train est identifié par son \textit{numéro} et possède un \textit{type} qui est soit TGV, TER ou INTERCITE.
+
+\subsubsection*{Schéma de la base de données}
+
+Le schéma initial de la base de données est le suivant. 
+
+L'heure de départ {\tt Heure} et {\tt Chrono} sont exprimés en heure. Ils sont stockés sous la forme d'un nombre décimal. Pour simplifier leur lecture, ces valeurs sont représentées avec la notation classique des heures. Ainsi, ``9h30'' est stockée sous la forme du nombre 9,5. 
+
+\begin{tikzpicture}\tt
+  % train
+  \node (train) at (0,0) {
+    \begin{tabular}{|l|}\hline
+      \cellcolor{gray!25}TRAIN\\\hline
+      \underline{NoTrain}\\
+      Type\\\hline
+    \end{tabular}
+  };
+  % DEPART
+  \node (horaire) at (3,0) {
+    \begin{tabular}{|l|}\hline
+      \cellcolor{gray!25}DEPART\\\hline
+      \underline{NoLigne}\\
+      \underline{Heure}\\
+      \underline{NoTrain}\\[0.05cm]\hline
+    \end{tabular}
+  };
+  % LIGNE
+  \node (ligne) at (6,0) {
+    \begin{tabular}{|l|}\hline
+      \cellcolor{gray!25}LIGNE\\\hline
+      \underline{NoLigne}\\
+      Nom\\\hline
+    \end{tabular}
+  };
+
+  % ARRET
+  \node (arret) at (9,0) {
+    \begin{tabular}{|l|}\hline
+      \cellcolor{gray!25}ARRET\\\hline
+      \underline{NoLigne}\\
+      \underline{Rang}\\
+      Ville\\
+      Chrono\\\hline
+    \end{tabular}
+  };
+
+  \draw [-{Stealth[scale=1.4]}] (horaire) edge (train)
+  (horaire) edge (ligne)
+  (arret) edge (ligne);
+
+\end{tikzpicture}
+% } % fbox
+%   \caption{\label{fig:schema}Les neuf tables de la base de données.}
+% \end{figure}
+
+Ci-dessous, un exemple de contenu pour les différentes tables de la base de données. 
+
+      \begin{tabular}[]{ll}
+        \rowcolor{gray!25}\multicolumn{2}{c}{{\tt TRAIN} }\\
+        {\tt NoTrain} & {\tt Type}\\
+        \hline
+        9634 & INTERCITE \\
+        3472 & TER \\
+        4486 & TGV \\
+        8645 & TGV 
+      \end{tabular}
+      \begin{tabular}[]{lll}
+        \rowcolor{gray!25}\multicolumn{3}{c}{{\tt DEPART} }\\
+        {\tt NoLigne} & {\tt Heure} & {\tt NoTrain} \\
+        \hline
+        2 & 6h00 & 4486\\
+        0 & 9h00 & 9634\\
+        1 & 9h00 & 3472 \\
+        2 & 9h30 & 8645\\
+        3 & 15h00 & 9634\\
+      \end{tabular}
+
+      \begin{tabular}[]{ll}
+        \rowcolor{gray!25}\multicolumn{2}{c}{{\tt LIGNE} }\\
+        {\tt NoLigne} & {\tt Nom}\\
+        \hline
+        0 & Clermont-Paris \\
+        1 & Clermont-Lyon \\
+        2 & Marseille-Paris \\
+        3 & Paris-Clermont 
+      \end{tabular}
+      \begin{tabular}[]{llll}
+        \rowcolor{gray!25}\multicolumn{4}{c}{{\tt ARRET} }\\
+        {\tt NoLigne} & {\tt Rang} & {\tt Ville} & {\tt Chrono} \\
+        \hline
+        0 & 0 & Clermont-Fd & 0 \\
+        0 & 1 & Vichy & 1h \\
+        0 & 2 & Paris & 4h \\
+        1 & 0 & Clermont-Fd & 0 \\
+        1 & 1 & Lyon & 1h \\
+        2 & 0 & Marseille & 0 \\
+        2 & 1 & Lyon & 1h \\
+        2 & 2 & Paris & 3h \\
+        3 & 0 & Paris & 0 \\
+        3 & 1 & Clermont-Fd & 4h \\
+      \end{tabular}
+
+      % Avant de commencer le projet, il faudra :
+      % \begin{enumerate}
+        
+      % \item Essayer de trouver les différents voyages de Clermont-Fd vers Paris que l'on peut réaliser sur l'exemple ci-dessus.
+      % \item Récupérer le code du projet depuis le dépot : \url{https://gitlab.isima.fr/maburon/projet-train}
+      % \item En suivant les instructions dans le fichier {\tt README.org}, mettre en place un environnement de developpement fonctionnel.
+      % \end{enumerate}
+
+
+      \subsection*{Cahier des charges}
+
+      La section suivante propose d'implémenter certains objectifs. Ces objectifs doivent être réalisés en gardant en tête le cahier des charges suivant:
+
+      \subsubsection*{Éviter les erreurs HTTP 500}
+
+      Éviter dès que cela est possible, les erreurs HTTP 500. Pour cela, il faut rattraper au maximum les exceptions soulevées par les erreurs de violation de contraintes au niveau de la base de données, les erreurs dues à des données incorrectes dans les requêtes HTTP POST ou GET, etc. Vous devez dans ces cas, retourner une erreur HTTP 400 avec un message expliquant précisément la cause de l'erreur.
+
+      \subsubsection*{Choisir le bon niveau d'isolation}
+
+      Pour chaque transaction, il faut choisir le niveau d'isolation qui permet de s'assurer qu'aucune ou très peu d'anomalie de sérialisabilité ne puisse apparaître, tout en maximisant la concurrence entre les transactions. Justifier votre choix dans un commentaire au début de chaque transaction. 
+      
+      \subsubsection*{Recommencer les transactions avec une erreur de sériabilité}
+
+      En cas d'exceptions soulevées par une erreur dues à un interblocage ou un conflit transactionnel, recommencer la transaction en cours sans retourner d'erreur.
+
+      \subsubsection*{Implémenter au maximum les contraintes simples dans le SGBD}
+
+      Implémenter systématiquement les contraintes sur les données avec des clés primaires, clés étrangères ou \lstinline{CHECK} dès que cela est possible.
+
+      \subsection*{Objectifs}
+
+      Dans cette section se trouve les objectifs obligatoires du projet.
+      
+      \begin{objectif}
+        Compléter la classe ``com.uca.dao.DBInitializer'' de sorte que chaque table du schéma soit crée si elle est manquante dans la base de données.
+      \end{objectif}
+
+      \begin{objectif}
+        En vous inspirant des pages existantes pour les trains, créer les pages suivantes pour gérer les lignes :
+        \begin{itemize}
+        \item une page qui liste l'ensemble des lignes avec leur numéro et leur nom à l'URL \url{http://localhost:8081/ligne} avec des boutons pour supprimer chaque ligne,
+        \item une page avec un formulaire pour créer une nouvelle ligne à l'URL : \url{http://localhost:8081/ligne/ajout}.
+        \end{itemize}
+
+      \end{objectif}
+
+      \begin{objectif}
+        De même, créer les pages suivantes pour gérer les arrêts :
+        \begin{itemize}
+        \item une page affichant dans l'ordre les arrêt d'une ligne de numéro $n$ à l'URL \url{http://localhost:8081/arret?noligne=n} avec des boutons pour supprimer chaque arrêt,
+        \item une page avec un formulaire pour ajouter un arrêt sur une ligne $n$ au rang $k$ à l'URL \url{http://localhost:8081/arret?noligne=n\&rang=k}.
+        \end{itemize}
+
+        Ajouter les liens suivants :
+        \begin{itemize}
+        \item sur la page affichant les lignes, un lien vers la page affichant les arrêts de cette ligne,
+        \item sur la page affichant les arrêts d'une ligne, un lien pour ajouter un arrêt à la fin de la ligne.
+        \end{itemize}
+      \end{objectif}
+
+      \begin{objectif}
+        Finalement, créer les pages suivantes pour gérer les départs :
+        \begin{itemize}
+        \item  pour chaque train de numéro $n$, une page listant les départs de ce train à l'URL \url{http://localhost:8081/depart?notrain=n} avec des boutons pour supprimer chaque départ,
+        \item une page de formulaire pour ajouter un départ à un train à l'URL \url{http://localhost:8081/depart/ajout?notrain=n}.
+        \end{itemize}
+
+        Ajouter les liens suivants sur la page affichant les trains :
+        \begin{itemize}
+        \item un lien vers le formulaire pour ajouter un départ à chaque train,
+        \item un lien vers la page affichant les départs de chaque train. 
+        \end{itemize}
+        
+      \end{objectif}
+
+      \begin{objectif}
+        Lors de la suppression d'un train, supprimer tous ses départs automatiquement. Lors de la suppression d'une ligne, de même supprimez tous ses arrêts et les départs sur cette ligne. 
+      \end{objectif}
+
+\begin{objectif}
+  Lors de la suppression d'un arrêt, veuillez à ce que tous les arrêts suivants, c'est à dire de rang strictement supérieur soient décalés d'un rang en arrière.
+  Lors de l'ajout d'un arrêt à un rang déjà existant, décaler les arrêts de rang supérieur d'un rang en avant, avant d'insérer le nouvel arrêt. De plus, quelque soit les requêtes du client, on souhaite que sur chaque ligne avec $n$ arrêts, le rang de ses arrêts soit entre 0 et $n-1$.
+  
+  Sur la page affichant les arrêts d'une ligne, ajouter des liens vers le formulaire d'ajout d'un arrêt pour pouvoir ajouter un nouvel arrêt avant chaque arrêt existant.
+\end{objectif}
+
+\begin{objectif}
+  Pour des raisons de sécurité, on souhaite que sur chaque ligne le temps de passage d'un arrêt au suivant, c'est à dire que la différence de leur chronos, soit supérieur ou égale à 15 minutes. Assurer que cette contrainte est toujours vérifiée. 
+\end{objectif}
+
+
+\begin{objectif}
+  Pour des raisons de cohérence, vérifier qu'à tout instant que chaque train n'est pas à deux (ou plus) endroits à la fois.
+\end{objectif}
+
+\begin{objectif}
+  On suppose qu'un train qui arrive au bout d'une ligne reste à la gare terminus sur une voie de réserve. Il ne peut que repartir sur une ligne dont la gare de départ est le terminus de la ligne qu'il vient de terminer. Vérifier aussi que ça soit le cas d'un jours à un autre. Dit autrement, les trains ne se téléportent pas et se déplacent uniquement en empruntant des lignes. (cette propriété n'est pas respectée par l'exemple ci-dessus).
+\end{objectif}
+
+\subsection*{Objectifs bonus}
+
+\begin{objectif}
+  Ajouter un moyen de faire des recherches d'itinéraire, d'abord sans correspondance puis avec une correspondance. On s'intéressera uniquement aux itinéraires effectués dans une même journée.
+\end{objectif}
+
+\begin{objectif}
+  Améliorer le style du site Web et sa simplicité d'utilisation. Par exemple, faire en sorte que les champs des formulaires dont les valeurs possibles sont connues (par ex. celle du type d'un train, d'une gare pour la recherche d'itinéraire) soient représentés par une balise HTML \texttt{<select>}.
+\end{objectif}
+
+\begin{objectif}
+  En modifiant le schéma de la base, ajouter un nombre de voie de réserve à chaque gare et vérifier que le nombre de train en réserve (c'est à dire attendant à une gare pour partir sur une ligne) n'excède jamais le nombre de voie de réserve. 
+\end{objectif}
+
+\begin{objectif}
+    En modifiant le schéma de la base, ajouter une longitude et latitude à chaque gare. Sur la page d'accueil du site, ajouter une carte avec la position de chaque gare, le trajet de chaque ligne et la position à l'heure actuelle de chaque train.
+\end{objectif}
+
+\end{document}
