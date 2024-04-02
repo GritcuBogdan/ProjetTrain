@@ -228,7 +228,7 @@ Ci-dessous, un exemple de contenu pour les différentes tables de la base de don
 
       \subsubsection*{Éviter les erreurs HTTP 500}
 
-      Éviter dès que cela est possible, les erreurs HTTP 500. Pour cela, il faut rattraper au maximum les exceptions soulevées par les erreurs de violation de contraintes au niveau de la base de données, les erreurs dues à des données incorrectes dans les requêtes HTTP POST ou GET, etc. Vous devez dans ces cas, retourner une erreur HTTP 400 avec un message expliquant précisément la cause de l'erreur.
+      Éviter dès que cela est possible, les erreurs HTTP 500. Pour cela, il faut rattraper au maximum les exceptions soulevées par les erreurs de violation de contraintes au niveau de la base de données, les erreurs dues à des données incorrectes dans les requêtes HTTP POST ou GET, etc. Vous devez dans ces cas, retourner une erreur HTTP 400 avec un message expliquant précisément la cause de l'erreur. Ne pas oublier de retourner une erreur 404 pour les résultats vides.
 
       \subsubsection*{Choisir le bon niveau d'isolation}
 

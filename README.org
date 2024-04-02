@@ -126,16 +126,3 @@ Lancer une première fois le serveur Java avec la commande (à redémarrer aprè
 
 Rendez-vous sur http://localhost:8081/
 
-* Objectifs
-
-Le but de ce projet est un gestionnaire de trajet de train sur lequel plusieurs personnes puissent travailler en même temps. 
-
-Il faudra remplir les objectifs ci-dessous:
-
-
-** Initialiser la base de donnée
-
-Modifier le code de la classe "com.uca.dao.DBInitializer" pour initialiser les tables dans le cas, où elles n'existent pas. Il faut aussi choisir une clé primaire pour chaque table, ajouter des clés étrangères.
-
-
-
