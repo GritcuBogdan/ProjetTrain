@@ -90,7 +90,15 @@ Contrairement au client Oracle, l'auto commit est activé dans psql, ce qui sign
 - ~\dt~ lister les tables de la base de données courante
 - ~\c autre_base~ se connecter à une autre base de données
 
-*** Coder depuis une machine locale sans Postgres (à tester en salle d'info)
+*** Connexion à la VM via RDP
+
+1. lancer Remmina depuis la machine locale
+2. créer un nouveau profil de connexion
+3. modifier le champ *serveur* avec  "vm-etu-login.local.isima.fr"
+4. modifier le champ *Nom d'utilisateur* avec "login"
+5. cliquer sur enregistrer et se connecter
+
+*** Coder depuis une machine locale sans Postgres (ne fonctionne pas en salle info)
 
 Il se peut que vous constatiez des difficultés pour coder depuis votre machine virtuelle. Il serait préférable de coder depuis la machine locale et de tester avec le navigateur Web de la machine locale. Cela est possible grâce à SSH en transférant la connexion TCP/IP sur le port 5432 de la machine locale au serveur Postgres sur la machine virtuelle :
 
