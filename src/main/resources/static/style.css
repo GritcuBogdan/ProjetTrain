@@ -1,15 +1,50 @@
+/* Apply styles to the table */
 table {
-  font-family: arial, sans-serif;
+  font-family: Arial, sans-serif;
   border-collapse: collapse;
   width: 100%;
 }
 
-td, th {
+/* Apply styles to table headers */
+th {
+  background-color: #f2f2f2; /* Light gray background */
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 12px; /* Increased padding for better readability */
+}
+
+/* Apply styles to table cells */
+td {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
 }
 
+/* Apply alternate background color to even rows */
 tr:nth-child(even) {
-  background-color: #dddddd;
+  background-color: #f9f9f9; /* Lighter alternate background */
+}
+
+/* Apply styles to delete button */
+input[type="submit"] {
+  background-color: #dc3545; /* Red background */
+  color: white; /* White text */
+  border: none;
+  padding: 8px 16px; /* Increased padding for better appearance */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  border-radius: 4px; /* Rounded corners */
+}
+
+/* Style link buttons */
+a.button {
+  background-color: #007bff; /* Blue background */
+  color: white; /* White text */
+  padding: 8px 16px; /* Increased padding for better appearance */
+  text-decoration: none; /* Remove underline */
+  border-radius: 4px; /* Rounded corners */
+  margin-right: 8px; /* Add margin between buttons */
+}
+
+a.button:hover {
+  background-color: #0056b3; /* Darker blue background on hover */
 }

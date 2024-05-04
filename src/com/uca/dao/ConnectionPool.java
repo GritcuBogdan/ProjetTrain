@@ -12,7 +12,7 @@ public class ConnectionPool {
     private final static int INITIAL_POOL_SIZE = 10;
     private final static String URL = "jdbc:postgresql://localhost/train";
     private final static String USER = "postgres";
-    private final static String PASSWORD = "postgres";
+    private final static String PASSWORD = "password";
 
     // connections disponibles
     private static List<Connection> connectionPool = new ArrayList<>(INITIAL_POOL_SIZE);

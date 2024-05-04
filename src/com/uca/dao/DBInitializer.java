@@ -2,7 +2,7 @@ package com.uca.dao;
 
 import java.sql.*;
 
-public class DBInitializer {
+public class  DBInitializer {
 
     /**
      * cette méthode permet d'initialiser la BD en créant les tables manquantes
@@ -16,6 +16,21 @@ public class DBInitializer {
                     statement = connection.prepareStatement("CREATE TABLE TRAIN (NoTrain integer, Type text,primary key(noTrain));");
                     statement.executeUpdate();
             }
+            if (!tableExists(connection, "DEPART")) {
+                statement = connection.prepareStatement("CREATE TABLE DEPART (NoLigne INTEGER, Heure DECIMAL(5,2), NoTrain INTEGER, PRIMARY KEY (NoLigne, NoTrain), FOREIGN KEY (NoLigne) REFERENCES LIGNE(NoLigne));");
+                statement.executeUpdate();
+            }
+
+            if (!tableExists(connection, "LIGNE")) {
+                statement = connection.prepareStatement("CREATE TABLE LIGNE (NoLigne INTEGER, Nom TEXT, PRIMARY KEY (NoLigne));");
+                statement.executeUpdate();
+            }
+
+            if (!tableExists(connection, "ARRET")) {
+                statement = connection.prepareStatement("CREATE TABLE ARRET (NoLigne INTEGER, Rang INTEGER, Ville TEXT, Chrono DECIMAL(5,2), PRIMARY KEY (NoLigne, Rang), FOREIGN KEY (NoLigne) REFERENCES LIGNE(NoLigne));");
+                statement.executeUpdate();
+            }
+
 
             //TODO : créer le code pour les autres tables
             

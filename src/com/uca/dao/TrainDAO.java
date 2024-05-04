@@ -65,23 +65,56 @@ public class TrainDAO extends AbstractDAO<Train> {
         ConnectionPool.releaseConnection(connection);
     }
 
-    public static void delete(int no) throws SQLException {
-        Connection connection = ConnectionPool.getConnection();
-
+    public void delete(int trainNumber) throws SQLException {
+        Connection connection = null;
+        PreparedStatement statementTrain = null;
+        PreparedStatement statementDepart = null;
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM train WHERE notrain =?;");
-            preparedStatement.setInt(1, no);
-            preparedStatement.executeUpdate();
+            // Get a connection from the connection pool
+            connection = ConnectionPool.getConnection();
 
+            // Start a transaction
+            connection.setAutoCommit(false);
+
+            // Delete all departures associated with the train
+            DepartDAO.getInstance().deleteDeparturesForTrain(trainNumber);
+
+            // Delete the train itself
+            String sqlTrain = "DELETE FROM train WHERE notrain = ?";
+            statementTrain = connection.prepareStatement(sqlTrain);
+            statementTrain.setInt(1, trainNumber);
+            statementTrain.executeUpdate();
+
+            // Delete departures associated with the train
+            String sqlDepart = "DELETE FROM depart WHERE notrain = ?";
+            statementDepart = connection.prepareStatement(sqlDepart);
+            statementDepart.setInt(1, trainNumber);
+            statementDepart.executeUpdate();
+
+            // Commit the transaction
+            connection.commit();
         } catch (SQLException e) {
-            // dès qu'une exception SQL est levée, il faut annuler la transaction
-            connection.rollback();
-            // on propage l'exception
+            // Rollback the transaction
+            if (connection != null) {
+                connection.rollback();
+            }
+            // Log the exception
+            e.printStackTrace();
+            // Rethrow the exception to propagate it up the call stack
             throw e;
+        } finally {
+            // Close the statements
+            if (statementTrain != null) {
+                statementTrain.close();
+            }
+            if (statementDepart != null) {
+                statementDepart.close();
+            }
+            // Release the connection back to the connection pool
+            if (connection != null) {
+                connection.close();
+            }
         }
-        
-        connection.commit();
-        ConnectionPool.releaseConnection(connection);
     }
 
 }

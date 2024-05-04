@@ -1,136 +1,135 @@
-#+TITLE: Projet : Train
+#+TITLE: Project: Train
 
-* Prise en main
+* Getting started
 
-** Forker le dépôt depuis Gitlab
+** Fork the repository from Gitlab
 
-En vous connectant sur gitlab.isima.fr, vous pouvez utiliser le bouton "Fork" du projet pour en faire une copie sur votre compte et ainsi faire des push dessus. 
+By connecting to gitlab.isima.fr, you can use the project's "Fork" button to make a copy of it on your account and thus push it.
 
-** Configurer votre espace de travail
+** Configure your workspace
 
-Il vous faut outil de développement en Java, mais surtout l'accès à un serveur postgresql. Deux choix s'offrent à vous :
+You need a Java development tool, but above all access to a postgresql server. Two choices are available to you:
 
-1. programmer et  installer posgresql sur votre machine personnelle
-2. programmer et installer postgresql sur votre machine virtuelle (celle nommée vm-etu-votre_login.local.isima.fr)
-** Configuration de Postgresql
+1. program and install posgresql on your personal machine
+2. program and install postgresql on your virtual machine (the one named vm-etu-votre_login.local.isima.fr)
+** Configuring Postgresql
 
-Pour développer, il faudra ouvrir une connection avec un serveur postgres, qui sera installé sur votre machine virtuelle étudiante (celle nommée vm-etu-votre_login.local.isima.fr).
+To develop, you will need to open a connection with a postgres server, which will be installed on your student virtual machine (the one named vm-etu-votre_login.local.isima.fr).
 
-*** Installation de postgresql 
+*** Installing postgresql
 
 #+BEGIN_src bash
 sudo apt install postgresql
 #+END_src
 
-*** Vérifier que les connexions TCP/IP avec mot de passe sont permises
+*** Check that TCP/IP connections with password are allowed
 
-L'API JDBC (Java Database Connectivity) est un outil incontournable pour interagir avec un SGDB depuis Java. Cette API ouvre une connection avec le serveur postgres via le protocole TCP/IP sur le port par défaut 5432.  Pour des raisons de sécurité de telles connexions ne sont pas toujours possible par défaut. On souhaite se connecter avec un utilisateur et un mot de passe (que l'on va créer juste après) en utilisant soit la méthode d'authentification ~md5~ ou ~scram-sha-256~.
+The JDBC API (Java Database Connectivity) is an essential tool for interacting with a SGDB from Java. This API opens a connection with the Postgres server via the TCP/IP protocol on the default port 5432. For security reasons such connections are not always possible by default. We want to connect with a user and a password (which we will create shortly after) using either the ~md5~ or ~scram-sha-256~ authentication method.
 
-Éditer le fichier de configuration ~pg_hda.conf~ (sur Debian dans le dossier ~/etc/postgresql/<version>/main~, existe aussi sous Windows : ~C:\Program Files\PostgreSQL\<version>\data\postgresql.conf~) et modifier deux lignes de la manière suivante en vérifiant que la dernière colonne a pour valeur ~md5~ ou ~scram-sha-256~ :
+Edit the configuration file ~pg_hda.conf~ (on Debian in the folder ~/etc/postgresql/<version>/main~, also exists on Windows: ~C:\Program Files\PostgreSQL\<version>\data\postgresql .conf~) and modify two lines as follows, checking that the last column has the value ~md5~ or ~scram-sha-256~:
 
 #+BEGIN_src
 # IPv4 local connections:
-host    all             all             127.0.0.1/32            scram-sha-256
+host all all 127.0.0.1/32 scram-sha-256
 # IPv6 local connections:
-host    all             all             ::1/128                 scram-sha-256
+host all all ::1/128 scram-sha-256
 #+END_src
 
-En cas d'erreurs répétées, vous pouvez accepter toutes les connexions sans vérifier le mot de passe en remplaçant ~scram-sha-256~ par ~trust~.
+In case of repeated errors, you can accept all connections without checking the password by replacing ~scram-sha-256~ with ~trust~.
 
-Redémarrer le serveur Postgres après chaque modification de fichier de configuration avec :
+Restart the Postgres server after each configuration file modification with:
 #+BEGIN_src sql
 sudo systemctl restart postgresql
 #+END_src
 
-Plus d'information ici :
+More information here:
 - [[https://www.postgresql.org/docs/current/auth-pg-hba-conf.html]]
 - [[https://www.postgresql.org/docs/current/auth-password.html]]
 
-*** Configurer votre utilisateur et votre base de données
+*** Configure your user and database
 
-Connectez vous au serveur postgres via le client ~psql~:
+Connect to the postgres server via the ~psql~ client:
 #+BEGIN_src bash
-  sudo -u postgres psql
+   sudo -u postgres psql
 #+END_src
 
-Créer votre utilisateur ~nom_d_utilisateur~ avec un utilisateur de votre choix avec le mot de passe de votre choix:
+Create your user ~username~ with a user of your choice with the password of your choice:
 #+BEGIN_src sql
-CREATE USER nom_d_utilisateur WITH PASSWORD 'un mot de passe simple';
+CREATE USER username WITH PASSWORD 'a simple password';
 #+END_src
 
-Créer la base de donnée que vous allez utiliser durant le projet : 
+Create the database that you will use during the project:
 #+BEGIN_src sql
 CREATE DATABASE train;
 #+END_src
 
-Déclarer votre utilisateur comme propriétaire de la base :
+Declare your user as owner of the database:
 #+BEGIN_src sql
-ALTER DATABASE train OWNER TO nom_d_utilisateur;
+ALTER DATABASE train OWNER TO username;
 #+END_src
 
-Accorder tous les droits à votre utilisateur sur cette base :
+Grant all rights to your user based on this:
 #+BEGIN_src sql
-GRANT ALL PRIVILEGES ON DATABASE train TO nom_d_utilisateur;
+GRANT ALL PRIVILEGES ON DATABASE train TO username;
 #+END_src
 
-Quitter le client ~psql~ avec la commande ~\q~. Et déconnectez vous du login postgres depuis bash.
+Exit the ~psql~ client with the ~\q~ command. And log out of the postgres login from bash.
 
-Tester la connexion à votre base de données avec votre nouvel utilisateur via TCP/IP:
+Test the connection to your database with your new user via TCP/IP:
 #+BEGIN_src bash
-psql -U nom_d_utilisateur -h localhost -d train -W
+psql -U username -h localhost -d train -W
 #+END_src
 
-*** Commandes utiles dans le client psql
+*** Useful commands in the psql client
 
-Contrairement au client Oracle, l'auto commit est activé dans psql, ce qui signifie que :
-- les transactions doivent explicitement débuter par le mot-clé ~BEGIN~
-- les requêtes en dehors de transaction sont automatiquement validé à la fin de l'exécution, s'il n'y pas d'erreur.
+Unlike the Oracle client, auto commit is enabled in psql, which means that:
+- transactions must explicitly begin with the keyword ~BEGIN~
+- requests outside of transactions are automatically validated at the end of execution, if there are no errors.
 
-- ~\q~ quitter
-- ~\dt~ lister les tables de la base de données courante
-- ~\c autre_base~ se connecter à une autre base de données
+- ~\q~ exit
+- ~\dt~ list the tables of the current database
+- ~\c other_base~ connect to another database
 
-*** Connexion à la VM via RDP
+***Connecting to the VM via RDP
 
-1. lancer Remmina depuis la machine locale
-2. créer un nouveau profil de connexion
-3. modifier le champ *serveur* avec  "vm-etu-login.local.isima.fr"
-4. modifier le champ *Nom d'utilisateur* avec "login"
-5. cliquer sur enregistrer et se connecter
+1. launch Remmina from the local machine
+2. create a new connection profile
+3. modify the *server* field with “vm-etu-login.local.isima.fr”
+4. modify the *Username* field with "login"
+5. click save and log in
 
-*** Coder depuis une machine locale sans Postgres (ne fonctionne pas en salle info)
+*** Code from a local machine without Postgres (does not work in the info room)
 
-Il se peut que vous constatiez des difficultés pour coder depuis votre machine virtuelle. Il serait préférable de coder depuis la machine locale et de tester avec le navigateur Web de la machine locale. Cela est possible grâce à SSH en transférant la connexion TCP/IP sur le port 5432 de la machine locale au serveur Postgres sur la machine virtuelle :
+You may experience difficulty coding from your virtual machine. It would be better to code from the local machine and test with the local machine's web browser. This is possible using SSH by forwarding the TCP/IP connection on port 5432 from the local machine to the Postgres server on the virtual machine:
 
 #+BEGIN_src bash
 ssh -L 5432:localhost:5432 login@vm-etu-login.local.isima.fr
 #+END_src
 
-*** Sources
+***Sources
 - https://www.bigbinary.com/blog/configure-postgresql-to-allow-remote-connection
 - https://www.ibm.com/docs/fr/urbancode-deploy/6.2.2?topic=configuration-configuring-postgresql-database-blueprint-design-server
 
 
-** Première exécution
+** First execution
 
-*** ConnectionPool
+        ***ConnectionPool
 
-Avant de lancer le code pour la première fois, il faut configurer l'accès à la base de données. Aller dans la classe "com.uca.dao.ConnectionPool" et modifier les valeurs suivantes :
+        Before running the code for the first time, you must configure access to the database. Go to the "com.uca.dao.ConnectionPool" class and modify the following values:
 
-  - ~URL~ devient "jdbc:postgresql://localhost/train"
-  - ~USER~ devient "nom_d_utilisateur"
-  - ~PASSWORD~ devient "votre_mot_de_passe"
+           - ~URL~ becomes "jdbc:postgresql://localhost/train"
+           - ~USER~ becomes "user_name"
+           - ~PASSWORD~ becomes "your_password"
 
- La classe ~ConnectionPool~ gère les différentes connections ouvertes par le serveur Java. Un objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]] en java correspond à une session, où plusieurs transactions successives peuvent être créées. Quand on souhaite créer une transaction depuis Java, on demande une connection à ~ConnectionPool~ via la méthode ~getConnection~ et une fois la transaction finie, il faut la rendre à ~ConnectionPool~ via ~releaseConnection~.
+          The ~ConnectionPool~ class manages the different connections opened by the Java server. An object [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]] in java corresponds to a session, where several successive transactions can be created. When we want to create a transaction from Java, we request a connection to ~ConnectionPool~ via the ~getConnection~ method and once the transaction is finished, we must return it to ~ConnectionPool~ via ~releaseConnection~.
 
- *Remarque*: Vous devez toujours interagir avec la base de données en créant des transactions. Pour cela, vous devez utiliser les méthodes ~setAutoCommit~, ~commit~ et ~rollback~ de l'objet [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html][Connection]]. N'oubliez pas non plus de choisir un niveau d'isolation des transactions avec la méthode ~setTransactionIsolation~.
+          *Note*: You still need to interact with the database by creating transactions. To do this, you must use the ~setAutoCommit~, ~commit~ and ~rollback~ methods of the object [[https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html ][Connection]]. Also don't forget to choose a transaction isolation level with the ~setTransactionIsolation~ method.
 
-*** Exécution
+        *** Execution
 
-Lancer une première fois le serveur Java avec la commande (à redémarrer après chaque modification du code) : 
-#+BEGIN_src bash 
-./gradlew run
-#+END_src
+        Start the Java server for the first time with the command (to be restarted after each code modification):
+        #+BEGIN_src bash
+        ./gradlew run
+        #+END_src
 
-Rendez-vous sur http://localhost:8081/
-
+        Go to http://localhost:8081/

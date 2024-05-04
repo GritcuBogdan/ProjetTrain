@@ -1,21 +1,27 @@
 <#macro page>
-<html>
+  <html>
   <head>
     <title>${title}</title>
     <link rel="stylesheet" href="style.css"/>
     <meta charset="utf-8" />
   </head>
   <body>
-    <nav>
-      <ul>
-        <li><a href="/train">Trains</a></li>
-      </ul>
-    </nav>
+  <nav>
+    <ul>
+      <li><a href="/train">Trains</a></li>
+      <li><a href="/ligne">Lignes</a></li>
+      <li><a href="/arret">Arrêts</a></li> <!-- Link to the stops page -->
+    </ul>
+  </nav>
 
-    <h1>${title}</h1>
+  <h1>${title}</h1>
 
-    <#-- ici est inséré le contenu du sous template  -->
-         <#nested>
+  <#-- ici est inséré le contenu du sous template  -->
+  <#nested>
   </body>
-</html>
+  </html>
+</#macro>
+
+<#macro ligne>
+  <!-- Include your ligne.ftl content here -->
 </#macro>
