@@ -48,3 +48,36 @@ a.button {
 a.button:hover {
   background-color: #0056b3; /* Darker blue background on hover */
 }
+
+/* Navbar styles */
+.navbar {
+  background-color: #5b5b5b; /* Blue navbar background */
+  color: white; /* White text */
+  padding: 10px 0; /* Padding for better appearance */
+}
+
+.navbar-brand {
+  font-size: 24px; /* Larger font size for brand */
+  font-weight: bold; /* Bold font weight for brand */
+}
+
+.navbar-nav {
+  list-style: none; /* Remove default list style */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+}
+
+.nav-item {
+  display: inline-block; /* Display items inline */
+  margin-right: 20px; /* Add margin between items */
+}
+
+.nav-link {
+  color: white; /* White text */
+  text-decoration: none; /* Remove underline */
+  font-size: 18px; /* Font size */
+}
+
+.nav-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}

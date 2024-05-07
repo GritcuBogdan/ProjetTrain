@@ -1,6 +1,7 @@
 package com.uca.dao;
 
 import com.uca.entity.Depart;
+import com.uca.entity.Train;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -164,16 +165,35 @@ public class DepartDAO extends AbstractDAO<Depart> {
             statement.setInt(1, trainNumber);
             statement.executeUpdate();
         } finally {
-            // Close the statement
+
             if (statement != null) {
                 statement.close();
             }
-            // Release the connection back to the connection pool
+
             if (connection != null) {
                 connection.close();
             }
         }
     }
+    public boolean isDepartureConflict(int trainNumber, double heure) throws SQLException {
+        Connection connection = ConnectionPool.getConnection();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT COUNT(*) AS count FROM depart WHERE notrain = ? AND heure = ?"
+            );
+            preparedStatement.setInt(1, trainNumber);
+            preparedStatement.setDouble(2, heure);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt("count");
+                return count > 0;
+            }
+            return false;
+        } finally {
+            ConnectionPool.releaseConnection(connection);
+        }
+    }
+
 
 
 }

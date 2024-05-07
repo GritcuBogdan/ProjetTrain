@@ -1,6 +1,7 @@
 package com.uca.dao;
 
 import com.uca.InvalidInputException;
+import com.uca.entity.Arret;
 import com.uca.entity.Ligne;
 
 import java.sql.*;
@@ -91,4 +92,8 @@ public class LigneDAO extends AbstractDAO<Ligne> {
         }
         return lignes;
     }
+    public Arret getTerminalStation(int lineNumber) throws SQLException {
+        return ArretDAO.getInstance().getHighestRankedStop(lineNumber);
+    }
+
 }
