@@ -17,8 +17,8 @@
   <div id="map"></div>
   <style>
     #map {
-      height: 400px; /* Adjust the height as needed */
-      width: 100%; /* Use 100% width */
+      height: 400px;
+      width: 100%;
     }
   </style>
 

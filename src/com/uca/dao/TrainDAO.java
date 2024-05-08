@@ -3,6 +3,7 @@ package com.uca.dao;
 import com.uca.InvalidInputException;
 
 import com.uca.entity.Arret;
+import com.uca.entity.Ligne;
 import com.uca.entity.Train;
 
 import java.sql.*;
@@ -54,9 +55,8 @@ public class TrainDAO extends AbstractDAO<Train> {
                 double longitude = resultSet.getDouble("longitude");
                 return new double[]{latitude, longitude};
             } else {
-                // If no data is found, you can handle this scenario as per your application logic
-                // For example, you can throw an exception or return default values
-                throw new SQLException("No latitude and longitude data found for line: " + lineNo);
+                // Return [0, 0] if no data is found
+                return new double[]{0, 0};
             }
         } finally {
             // Close the ResultSet, PreparedStatement, and release the connection
@@ -70,21 +70,58 @@ public class TrainDAO extends AbstractDAO<Train> {
         }
     }
 
+
+    private boolean lineExists(int lineNo) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = ConnectionPool.getConnection();
+            String sql = "SELECT COUNT(*) FROM LIGNE WHERE NoLigne = ?";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, lineNo);
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                return count > 0;
+            }
+            return false;
+        } finally {
+            // Close the ResultSet, PreparedStatement, and release the connection
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        }
+    }
+
     // insère un nouveau train
     public void add(Train train) throws SQLException, InvalidInputException {
         Connection connection = ConnectionPool.getConnection();
         PreparedStatement preparedStatement = null;
 
         try {
+            // Check if the line exists
+            if (!lineExists(train.getNoligne())) {
+                // If the line doesn't exist, create a new line
+                LigneDAO.getInstance().add(new Ligne(train.getNoligne(), "Default Line Name"));
+            }
+
             // Prepare the SQL statement to insert the train
             String sql = "INSERT INTO train(notrain, type, noligne, sur_reserve_track, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setInt(1, train.getNo());
             preparedStatement.setString(2, train.getType());
             preparedStatement.setInt(3, train.getNoligne());
-            preparedStatement.setBoolean(4,train.isOnReserveTrack());
+            preparedStatement.setBoolean(4, train.isOnReserveTrack());
             preparedStatement.setDouble(5, train.getLatitude()); // Latitude
-            preparedStatement.setDouble(6,train.getLongitude()); // Longitude
+            preparedStatement.setDouble(6, train.getLongitude()); // Longitude
 
             // Execute the update
             preparedStatement.executeUpdate();
@@ -96,6 +133,7 @@ public class TrainDAO extends AbstractDAO<Train> {
             ConnectionPool.releaseConnection(connection);
         }
     }
+
 
 
 
