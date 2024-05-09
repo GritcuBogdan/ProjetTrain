@@ -59,20 +59,43 @@ public class LigneDAO extends AbstractDAO<Ligne> {
     // Supprime une ligne
     public static void delete(int number) throws SQLException {
         Connection connection = ConnectionPool.getConnection();
+        PreparedStatement deleteArretsStatement = null;
+        PreparedStatement deleteLigneStatement = null;
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM Ligne WHERE NoLigne = ?;");
 
-            preparedStatement.setInt(1, number);
-            preparedStatement.executeUpdate();
+            connection.setAutoCommit(false);
+
+
+            deleteArretsStatement = connection.prepareStatement("DELETE FROM arret WHERE NoLigne = ?");
+            deleteArretsStatement.setInt(1, number);
+            deleteArretsStatement.executeUpdate();
+
+
+            deleteLigneStatement = connection.prepareStatement("DELETE FROM Ligne WHERE NoLigne = ?");
+            deleteLigneStatement.setInt(1, number);
+            deleteLigneStatement.executeUpdate();
+
+
+            connection.commit();
         } catch (SQLException e) {
-            // En cas d'erreur, on annule la transaction
-            connection.rollback();
-            // On propage l'exception
+
+            if (connection != null) {
+                connection.rollback();
+            }
+
             throw e;
+        } finally {
+
+            if (deleteArretsStatement != null) {
+                deleteArretsStatement.close();
+            }
+            if (deleteLigneStatement != null) {
+                deleteLigneStatement.close();
+            }
+            ConnectionPool.releaseConnection(connection);
         }
-        connection.commit();
-        ConnectionPool.releaseConnection(connection);
     }
+
 
     // Retourne toutes les lignes
     public List<Ligne> getAll() throws SQLException {

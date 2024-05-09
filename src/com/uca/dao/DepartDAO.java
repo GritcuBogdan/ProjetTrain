@@ -52,7 +52,7 @@ public class DepartDAO extends AbstractDAO<Depart> {
         Integer noLigne = null;
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(
-                    "SELECT DISTINCT noligne FROM depart WHERE notrain = ? LIMIT 1"
+                    "SELECT DISTINCT noligne FROM train WHERE notrain = ? LIMIT 1"
             );
             preparedStatement.setInt(1, trainNumber);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -65,7 +65,7 @@ public class DepartDAO extends AbstractDAO<Depart> {
         return noLigne;
     }
 
-    // Add a new departure
+
 // Add a new departure
     public void addDeparture(Depart departure) throws SQLException {
         Connection connection = null;

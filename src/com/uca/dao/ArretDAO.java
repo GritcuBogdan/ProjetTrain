@@ -273,4 +273,41 @@ public class ArretDAO extends AbstractDAO<Arret> {
         return arrets;
     }
 
+    public List<Arret> getByLineNo(int lineNo) throws SQLException {
+        Connection connection = ConnectionPool.getConnection();
+        List<Arret> arrets = new ArrayList<>();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            String sql = "SELECT * FROM arret WHERE noligne = ?";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, lineNo);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                int noLigne = resultSet.getInt("noLigne");
+                int rang = resultSet.getInt("rang");
+                String ville = resultSet.getString("ville");
+                double chrono = resultSet.getDouble("chrono");
+                int reserveDesPistes = resultSet.getInt("reserver_des_pistes");
+                double latitude = resultSet.getDouble("latitude");
+                double longitude = resultSet.getDouble("longitude");
+
+                Arret arret = new Arret(noLigne, rang, ville, chrono, reserveDesPistes, latitude, longitude);
+                arrets.add(arret);
+            }
+        } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            ConnectionPool.releaseConnection(connection);
+        }
+
+        return arrets;
+    }
+
 }

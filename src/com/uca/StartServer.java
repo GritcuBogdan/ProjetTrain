@@ -63,7 +63,10 @@ public class StartServer {
 
                 int trainNo = Integer.parseInt(req.queryParams("no"));
                 String type = req.queryParams("type");
-                boolean isOnReserveTracks = Boolean.parseBoolean(req.queryParams("isOnReserveTracks"));
+                String isOnReserveTracksParam = req.queryParams("sur_reserve_track");
+                System.out.println("isOnReserveTracksParam: " + isOnReserveTracksParam);
+                boolean isOnReserveTracks = "true".equals(isOnReserveTracksParam);
+                System.out.println(isOnReserveTracks);
                 int lineNo = Integer.parseInt(req.queryParams("noligne"));
                 double[] latLng = TrainDAO.getLatitudeLongitudeForStop(lineNo);
                 double latitude = latLng[0];
@@ -117,7 +120,36 @@ public class StartServer {
         });
 
 
-        get("/arret", (req, res) -> ArretGUI.list(ArretDAO.getInstance().getAll()));
+        get("/arret", (req, res) -> {
+            try {
+                // Retrieve the noligne parameter from the request URL
+                String noligneParam = req.queryParams("noligne");
+
+                if (noligneParam != null) {
+                    // Parse the noligne parameter to an integer
+                    int noligne = Integer.parseInt(noligneParam);
+
+                    // Fetch stops associated with the specified line number
+                    List<Arret> arrets = ArretDAO.getInstance().getByLineNo(noligne);
+
+                    // Pass the filtered list of stops to the ArretGUI list method
+                    return ArretGUI.list(arrets);
+                } else {
+                    // Handle the case when the noligne parameter is missing
+                    res.status(400);
+                    return "No line number parameter provided";
+                }
+            } catch (NumberFormatException e) {
+                // Handle the case when the noligne parameter cannot be parsed to an integer
+                res.status(400);
+                return "Invalid line number parameter";
+            } catch (Exception e) {
+                // Handle other exceptions
+                e.printStackTrace();
+                res.status(500);
+                return "Internal Server Error: " + e.getMessage();
+            }
+        });
 
 
 
@@ -239,11 +271,13 @@ public class StartServer {
                 // Retrieve the parameters from the form
                 String trainNumberParam = req.queryParams("notrain");
                 String heureParam = req.queryParams("heure");
+                String noligneParam = req.queryParams("noligne");
 
 
                 if (trainNumberParam != null && heureParam != null) {
                     int trainNumber = Integer.parseInt(trainNumberParam);
                     double heure = Double.parseDouble(heureParam);
+                    int noligne = Integer.parseInt(noligneParam);
 
 
                     boolean isDepartureConflict = DepartDAO.getInstance().isDepartureConflict(trainNumber, heure);
@@ -256,6 +290,7 @@ public class StartServer {
                         Integer noLigneInteger = DepartDAO.getInstance().getNoLigneForTrain(trainNumber);
                         if (noLigneInteger != null) {
                             int noLigne = noLigneInteger;
+
 
 
                             DepartDAO.getInstance().addDeparture(new Depart(noLigne, heure, trainNumber));
