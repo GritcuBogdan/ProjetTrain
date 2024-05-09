@@ -16,8 +16,8 @@
     </p>
     <p>
       <label for="reserveTrack">Voie de réserve</label>
-      <input type="hidden" name="sur_reserve_track" value="false"/> <!-- Hidden input for unchecked value -->
       <input type="checkbox" name="sur_reserve_track" id="sur_reserve_track" value="true"/>
+      <input type="hidden" name="sur_reserve_track" value="false"/> <!-- Hidden input for unchecked value -->
     </p>
     <p>
       <input type="submit" value="Ajouter"/>

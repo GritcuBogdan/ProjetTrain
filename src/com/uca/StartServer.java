@@ -64,9 +64,7 @@ public class StartServer {
                 int trainNo = Integer.parseInt(req.queryParams("no"));
                 String type = req.queryParams("type");
                 String isOnReserveTracksParam = req.queryParams("sur_reserve_track");
-                System.out.println("isOnReserveTracksParam: " + isOnReserveTracksParam);
                 boolean isOnReserveTracks = "true".equals(isOnReserveTracksParam);
-                System.out.println(isOnReserveTracks);
                 int lineNo = Integer.parseInt(req.queryParams("noligne"));
                 double[] latLng = TrainDAO.getLatitudeLongitudeForStop(lineNo);
                 double latitude = latLng[0];
