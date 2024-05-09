@@ -70,6 +70,10 @@ public class LigneDAO extends AbstractDAO<Ligne> {
             deleteArretsStatement.setInt(1, number);
             deleteArretsStatement.executeUpdate();
 
+            deleteArretsStatement = connection.prepareStatement("DELETE FROM depart WHERE NoLigne = ?");
+            deleteArretsStatement.setInt(1, number);
+            deleteArretsStatement.executeUpdate();
+
 
             deleteLigneStatement = connection.prepareStatement("DELETE FROM Ligne WHERE NoLigne = ?");
             deleteLigneStatement.setInt(1, number);

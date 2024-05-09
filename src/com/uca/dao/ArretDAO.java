@@ -92,7 +92,7 @@ public class ArretDAO extends AbstractDAO<Arret> {
     public void shiftRanksForward(int noLigne, int startRang) throws SQLException {
         Connection connection = ConnectionPool.getConnection();
         try {
-            PreparedStatement statement = connection.prepareStatement("UPDATE ARRET SET Rang = Rang + 1 WHERE NoLigne = ? AND Rang >= ?");
+            PreparedStatement statement = connection.prepareStatement("UPDATE ARRET SET Rang = Rang + 1 WHERE NoLigne = ? AND Rang > ?");
             statement.setInt(1, noLigne);
             statement.setInt(2, startRang);
             statement.executeUpdate();

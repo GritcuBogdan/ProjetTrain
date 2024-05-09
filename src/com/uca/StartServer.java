@@ -177,7 +177,7 @@ public class StartServer {
 
                 ArretDAO.getInstance().enforceTimeGaps(noLigne);
 
-                res.redirect("/arret");
+                res.redirect("/arret?noligne="+noLigne);
                 return "";
             } catch (NumberFormatException e) {
                 res.status(400);
@@ -205,7 +205,7 @@ public class StartServer {
                 ArretDAO.getInstance().shiftRanksBack(noLigne, rang);
 
 
-                res.redirect("/arret");
+                res.redirect("/arret?noligne="+noLigne);
                 return "";
             } catch (NumberFormatException e) {
                 res.status(400);
